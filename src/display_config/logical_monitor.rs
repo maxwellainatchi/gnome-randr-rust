@@ -29,6 +29,18 @@ impl Monitor {
     }
 }
 
+impl std::fmt::Display for Monitor {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        //      DVI-D-2 DELL S2340M
+
+        write!(
+            f,
+            "{} {} {} {}",
+            self.connector, self.vendor, self.product, self.serial
+        )
+    }
+}
+
 bitflags! {
 pub struct Transform: u32 {
     const NORMAL = 0b000;
@@ -46,13 +58,13 @@ pub struct Transform: u32 {
 impl fmt::Display for Transform {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let display = if self.contains(Transform::R270) {
-            "270°"
+            "left"
         } else if self.contains(Transform::R180) {
-            "180°"
+            "inverted"
         } else if self.contains(Transform::R90) {
-            "90°"
+            "right"
         } else {
-            ""
+            "normal"
         };
 
         write!(
@@ -127,5 +139,33 @@ impl LogicalMonitor {
                 .collect(),
             properties: result.6,
         }
+    }
+}
+
+impl std::fmt::Display for LogicalMonitor {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // x: 0 y: 820, scale: 1.0, rotation: normal, primary: no
+        // associated physical monitors:
+        //      DVI-D-2 DELL S2340M
+
+        writeln!(
+            f,
+            "x: {}, y: {}, scale: {}, rotation: {}, primary: {}",
+            self.x,
+            self.y,
+            self.scale,
+            self.transform,
+            if self.primary { "yes" } else { "no" }
+        )?;
+
+        writeln!(f, "associated physical monitors:")?;
+
+        for monitor in self.monitors.iter() {
+            writeln!(f, "\t{}", monitor)?
+        }
+
+        // TODO: Print properties?
+
+        Ok(())
     }
 }

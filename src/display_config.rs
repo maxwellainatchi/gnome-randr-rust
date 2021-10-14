@@ -3,7 +3,6 @@ pub mod physical_monitor;
 mod raw;
 
 // Config properties/comments are sourced from https://github.com/jadahl/gnome-monitor-config/blob/master/src/org.gnome.Mutter.DisplayConfig.xml
-
 use logical_monitor::LogicalMonitor;
 use physical_monitor::PhysicalMonitor;
 
@@ -95,6 +94,10 @@ impl DisplayConfig {
 
 impl std::fmt::Display for DisplayConfig {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "TODO")
+        // Print logical monitors
+        for (i, monitor) in self.logical_monitors.iter().enumerate() {
+            writeln!(f, "logical monitor {}:\n{}", i, monitor)?
+        }
+        Ok(())
     }
 }
