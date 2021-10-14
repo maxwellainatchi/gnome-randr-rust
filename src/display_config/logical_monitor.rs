@@ -1,3 +1,7 @@
+use std::fmt::{self};
+
+use bitflags::bitflags;
+
 // monitors displaying this logical monitor
 #[derive(Debug)]
 pub struct Monitor {
@@ -25,6 +29,45 @@ impl Monitor {
     }
 }
 
+bitflags! {
+pub struct Transform: u32 {
+    const NORMAL = 0b000;
+    const R90 = 0b001;
+    const R180 = 0b010;
+    const R270 = Self::R90.bits | Self::R180.bits;
+
+    const FLIPPED = 0b100;
+    const F90 = Self::R90.bits | Self::FLIPPED.bits;
+    const F180 = Self::R180.bits | Self::FLIPPED.bits;
+    const F270 = Self::R270.bits | Self::FLIPPED.bits;
+}
+}
+
+impl fmt::Display for Transform {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let display = if self.contains(Transform::R270) {
+            "270°"
+        } else if self.contains(Transform::R180) {
+            "180°"
+        } else if self.contains(Transform::R90) {
+            "90°"
+        } else {
+            ""
+        };
+
+        write!(
+            f,
+            "{}{}",
+            if self.contains(Transform::FLIPPED) {
+                "Flipped "
+            } else {
+                ""
+            },
+            display
+        )
+    }
+}
+
 //represent current logical monitor configuration
 #[derive(Debug)]
 pub struct LogicalMonitor {
@@ -47,7 +90,7 @@ pub struct LogicalMonitor {
      *   7: 270° flipped
      * TODO: change to enum
      */
-    pub transform: u32,
+    pub transform: Transform,
 
     // true if this is the primary logical monitor
     pub primary: bool,
@@ -75,7 +118,7 @@ impl LogicalMonitor {
             x: result.0,
             y: result.1,
             scale: result.2,
-            transform: result.3,
+            transform: Transform::from_bits_truncate(result.3),
             primary: result.4,
             monitors: result
                 .5
