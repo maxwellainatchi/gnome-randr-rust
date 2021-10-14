@@ -92,3 +92,9 @@ impl DisplayConfig {
         }
     }
 }
+
+impl std::fmt::Display for DisplayConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "TODO")
+    }
+}

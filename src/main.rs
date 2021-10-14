@@ -1,8 +1,20 @@
 use dbus;
 use dbus::blocking::Connection;
 use std::time::Duration;
+use structopt::{self, StructOpt};
 
 mod display_config;
+
+#[derive(StructOpt)]
+enum Command {
+    Query,
+}
+
+#[derive(StructOpt)]
+struct CLI {
+    #[structopt(subcommand)]
+    cmd: Option<Command>,
+}
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // First open up a connection to the session bus.
@@ -18,8 +30,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = display_config::DisplayConfig::get_current_state(&proxy)?;
 
-    // Let's print all the names to stdout.
-    println!("{:#?}", &config);
+    let args = CLI::from_args();
+
+    let cmd = args.cmd.unwrap_or(Command::Query);
+
+    match cmd {
+        Command::Query => println!("{}", config),
+    }
 
     Ok(())
 }
