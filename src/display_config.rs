@@ -1,12 +1,12 @@
-pub mod logical_monitor;
+pub mod physical_monitor;
 mod raw;
 
-use logical_monitor::LogicalMonitor;
+use physical_monitor::PhysicalMonitor;
 
 #[derive(Debug)]
 pub struct DisplayConfig {
     pub serial: u32,
-    pub logical_monitors: Vec<LogicalMonitor>,
+    pub monitors: Vec<PhysicalMonitor>,
 }
 
 impl DisplayConfig {
@@ -41,10 +41,10 @@ impl DisplayConfig {
     ) -> DisplayConfig {
         DisplayConfig {
             serial: result.0,
-            logical_monitors: result
+            monitors: result
                 .1
                 .into_iter()
-                .map(|logical_monitor| LogicalMonitor::from(logical_monitor))
+                .map(|monitor| PhysicalMonitor::from(monitor))
                 .collect(),
         }
     }

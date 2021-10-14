@@ -36,7 +36,7 @@ impl Mode {
 
 /// represent connected physical monitors
 #[derive(Debug)]
-pub struct LogicalMonitor {
+pub struct PhysicalMonitor {
     // connector name (e.g. HDMI-1, DP-1, etc)
     pub connector: String,
     // vendor name
@@ -69,15 +69,15 @@ pub struct LogicalMonitor {
     pub properties: dbus::arg::PropMap,
 }
 
-impl LogicalMonitor {
+impl PhysicalMonitor {
     pub fn from(
         result: (
             (String, String, String, String),
             Vec<(String, i32, i32, f64, f64, Vec<f64>, dbus::arg::PropMap)>,
             dbus::arg::PropMap,
         ),
-    ) -> LogicalMonitor {
-        LogicalMonitor {
+    ) -> PhysicalMonitor {
+        PhysicalMonitor {
             connector: result.0 .0,
             vendor: result.0 .1,
             product: result.0 .2,
