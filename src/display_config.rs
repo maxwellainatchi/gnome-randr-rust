@@ -107,37 +107,6 @@ pub struct DisplayConfig {
     pub serial: u32,
     pub monitors: Vec<PhysicalMonitor>,
     pub logical_monitors: Vec<LogicalMonitor>,
-    // @layout_mode current layout mode represents the way logical monitors
-    // are layed out on the screen. Possible modes include:
-    //   1 : physical
-    //   2 : logical
-    //
-    // With physical layout mode, each logical monitor has the same dimensions
-    // an the monitor modes of the associated monitors assigned to it, no
-    // matter what scale is in use.
-    // With logical mode, the dimension of a logical monitor is the dimension
-    // of the monitor mode, divided by the logical monitor scale.
-    //
-    // Possible @properties are:
-    // * "supports-mirroring" (b): FALSE if mirroring not supported; TRUE or not
-    //                             present if mirroring is supported.
-    // * "layout-mode" (u): Represents in what way logical monitors are laid
-    // 		     out on the screen. The layout mode can be either
-    // 		     of the ones listed below. Absence of this property
-    // 		     means the layout mode cannot be changed, and that
-    // 		     "logical" mode is assumed to be used.
-    //     * 1 : logical  - the dimension of a logical monitor is derived from
-    // 		     the monitor modes associated with it, then scaled
-    // 		     using the logical monitor scale.
-    //     * 2 : physical - the dimension of a logical monitor is derived from
-    // 		     the monitor modes associated with it.
-    // * "supports-changing-layout-mode" (b): True if the layout mode can be
-    // 				       changed. Absence of this means the
-    // 				       layout mode cannot be changed.
-    // * "global-scale-required" (b): True if all the logical monitors must
-    // 			       always use the same scale. Absence of
-    // 			       this means logical monitor scales can
-    // 			       differ.
     pub known_properties: KnownProperties,
     pub properties: dbus::arg::PropMap,
 }
