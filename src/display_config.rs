@@ -212,6 +212,11 @@ impl std::fmt::Display for DisplayConfig {
         for (i, monitor) in self.logical_monitors.iter().enumerate() {
             writeln!(f, "logical monitor {}:\n{}", i, monitor)?
         }
+
+        for monitor in self.monitors.iter() {
+            writeln!(f, "{}", monitor)?;
+        }
+
         Ok(())
     }
 }
