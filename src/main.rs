@@ -44,7 +44,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cmd = args.cmd.unwrap_or(Command::Query);
 
     match cmd {
-        Command::Query => println!("{}", config),
+        Command::Query => print!("{}", config),
     }
 
     Ok(())
