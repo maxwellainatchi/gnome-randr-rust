@@ -2,9 +2,105 @@ pub mod logical_monitor;
 pub mod physical_monitor;
 mod raw;
 
-// Config properties/comments are sourced from https://github.com/jadahl/gnome-monitor-config/blob/master/src/org.gnome.Mutter.DisplayConfig.xml
 use logical_monitor::LogicalMonitor;
 use physical_monitor::PhysicalMonitor;
+
+// Config properties/comments are sourced from https://github.com/jadahl/gnome-monitor-config/blob/master/src/org.gnome.Mutter.DisplayConfig.xml
+
+/// Current layout mode represents the way logical monitors are layed out on the screen.
+#[derive(Debug)]
+pub enum LayoutMode {
+    /// The dimension of a logical monitor is the dimension of the monitor mode, divided by the logical monitor scale.
+    Logical,
+    /// Each logical monitor has the same dimensions as the monitor modes of the associated monitors assigned to it, no matter what scale is in use.
+    Physical,
+}
+
+impl LayoutMode {
+    fn from(result: u64) -> LayoutMode {
+        match result {
+            2 => LayoutMode::Physical,
+            _ => LayoutMode::Logical,
+        }
+    }
+}
+
+impl std::fmt::Display for LayoutMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                LayoutMode::Logical => "logical",
+                LayoutMode::Physical => "physical",
+            }
+        )
+    }
+}
+
+const KNOWN_PROPERTY_KEYS: [&str; 4] = [
+    "supports-mirroring",
+    "layout-mode",
+    "supports-changing-layout-mode",
+    "global-scale-required",
+];
+
+#[derive(Debug)]
+pub struct KnownProperties {
+    pub supports_mirroring: bool,
+    /** Represents in what way logical monitors are laid out on the screen. The layout mode can be either of the ones listed below.
+     * Absence of this property means the layout mode cannot be changed, and that "logical" mode is assumed to be used. TODO: implement this
+     *   - 1 : logical  - the dimension of a logical monitor is derived from the monitor modes associated with it, then scaled using the logical monitor scale.
+     *   - 2 : physical - the dimension of a logical monitor is derived from the monitor modes associated with it.
+     */
+    pub layout_mode: LayoutMode,
+    pub supports_changing_layout_mode: bool,
+
+    // True if all the logical monitors must always use the same scale
+    pub global_scale_required: bool,
+}
+
+impl KnownProperties {
+    fn from(result: &dbus::arg::PropMap) -> KnownProperties {
+        let as_bool = |prop: &str| -> Option<bool> {
+            match result.get(prop).map(|val| val.0.as_u64()).flatten() {
+                Some(1) => Some(true),
+                Some(0) => Some(false),
+                _ => None,
+            }
+        };
+
+        KnownProperties {
+            supports_mirroring: as_bool("supports-mirroring").unwrap_or(true),
+            layout_mode: result
+                .get("layout-mode")
+                .map(|val| val.0.as_u64())
+                .flatten()
+                .map_or(LayoutMode::Logical, |val| LayoutMode::from(val)),
+            supports_changing_layout_mode: as_bool("supports-changing-layout-mode")
+                .unwrap_or(false),
+            global_scale_required: as_bool("global-scale-required").unwrap_or(false),
+        }
+    }
+}
+
+impl std::fmt::Display for KnownProperties {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "{}: {}", "supports-mirroring", self.supports_mirroring)?;
+        writeln!(f, "{}: {}", "layout-mode", self.layout_mode)?;
+        writeln!(
+            f,
+            "{}: {}",
+            "supports-changing-layout-mode", self.supports_changing_layout_mode
+        )?;
+        writeln!(
+            f,
+            "{}: {}",
+            "global-scale-required", self.global_scale_required
+        )?;
+        Ok(())
+    }
+}
 
 #[derive(Debug)]
 pub struct DisplayConfig {
@@ -42,6 +138,7 @@ pub struct DisplayConfig {
     // 			       always use the same scale. Absence of
     // 			       this means logical monitor scales can
     // 			       differ.
+    pub known_properties: KnownProperties,
     pub properties: dbus::arg::PropMap,
 }
 
@@ -75,6 +172,9 @@ impl DisplayConfig {
             dbus::arg::PropMap,
         ),
     ) -> DisplayConfig {
+        let all_properties = result.3;
+        let known_properties = KnownProperties::from(&all_properties);
+
         DisplayConfig {
             serial: result.0,
             monitors: result
@@ -87,13 +187,27 @@ impl DisplayConfig {
                 .into_iter()
                 .map(|monitor| LogicalMonitor::from(monitor))
                 .collect(),
-            properties: result.3,
+            properties: all_properties
+                .into_iter()
+                .filter(|(key, _)| !KNOWN_PROPERTY_KEYS.contains(&key.as_str()))
+                .collect(),
+            known_properties,
         }
     }
 }
 
 impl std::fmt::Display for DisplayConfig {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.known_properties)?;
+
+        // TODO: this should be sorted
+        for (prop, value) in self.properties.iter() {
+            if !KNOWN_PROPERTY_KEYS.contains(&prop.as_str()) {
+                writeln!(f, "{}: {:?}", prop, &value.0)?;
+            }
+        }
+        writeln!(f, "")?;
+
         // Print logical monitors
         for (i, monitor) in self.logical_monitors.iter().enumerate() {
             writeln!(f, "logical monitor {}:\n{}", i, monitor)?
