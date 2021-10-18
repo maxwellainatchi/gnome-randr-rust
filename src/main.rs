@@ -6,11 +6,17 @@ use structopt::{self, StructOpt};
 mod display_config;
 
 #[derive(StructOpt)]
+struct QueryCommandOpts {
+    #[structopt(short, long)]
+    pub connector: Option<String>,
+}
+
+#[derive(StructOpt)]
 enum Command {
     #[structopt(
         about = "Query returns information about the current state of the monitors. This is the default subcommand."
     )]
-    Query,
+    Query(QueryCommandOpts),
 }
 
 #[derive(StructOpt)]
@@ -23,7 +29,60 @@ struct CLI {
     cmd: Option<Command>,
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[derive(Debug)]
+enum QueryError {
+    NotFound,
+}
+
+impl std::fmt::Display for QueryError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match &self {
+                QueryError::NotFound => "fatal: unable to find output.",
+            }
+        )
+    }
+}
+
+impl std::error::Error for QueryError {}
+
+fn handle_query(
+    opts: &QueryCommandOpts,
+    config: &display_config::DisplayConfig,
+    proxy: &dbus::blocking::Proxy<&dbus::blocking::Connection>,
+) -> Result<String, Box<QueryError>> {
+    Ok(match &opts.connector {
+        Some(connector) => {
+            let physical_monitor = config
+                .monitors
+                .iter()
+                .find(|monitor| monitor.connector == *connector)
+                .ok_or(QueryError::NotFound)?;
+
+            let logical_monitor = config
+                .logical_monitors
+                .iter()
+                .find(|monitor| {
+                    match monitor
+                        .monitors
+                        .iter()
+                        .find(|pm| pm.connector == *connector)
+                    {
+                        Some(_) => true,
+                        None => false,
+                    }
+                })
+                .ok_or(QueryError::NotFound)?;
+
+            format!("{}\n{}", logical_monitor, physical_monitor)
+        }
+        None => format!("{}", config),
+    })
+}
+
+fn run() -> Result<(), Box<dyn std::error::Error>> {
     // Parse the CLI args. We do this first to short-circuit the dbus calls if there's an invalid arg.
     let args = CLI::from_args();
 
@@ -41,11 +100,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = display_config::DisplayConfig::get_current_state(&proxy)?;
 
     // See what we're executing
-    let cmd = args.cmd.unwrap_or(Command::Query);
+    let cmd = args
+        .cmd
+        .unwrap_or(Command::Query(QueryCommandOpts { connector: None }));
 
-    match cmd {
-        Command::Query => print!("{}", config),
-    }
+    print!(
+        "{}",
+        match cmd {
+            Command::Query(opts) => handle_query(&opts, &config, &proxy)?,
+        }
+    );
 
     Ok(())
+}
+
+fn main() {
+    if let Err(error) = run() {
+        eprintln!("{}", error);
+    }
 }
