@@ -7,8 +7,6 @@ use crate::display_config::DisplayConfig;
 
 pub mod query;
 
-use query::handle_query;
-
 #[derive(StructOpt)]
 enum Command {
     #[structopt(
@@ -52,7 +50,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     print!(
         "{}",
         match cmd {
-            Command::Query(opts) => handle_query(&opts, &config, &proxy)?,
+            Command::Query(opts) => query::handle(&opts, &config)?,
         }
     );
 

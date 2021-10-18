@@ -26,11 +26,7 @@ impl std::fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
-pub fn handle_query(
-    opts: &CommandOptions,
-    config: &DisplayConfig,
-    proxy: &dbus::blocking::Proxy<&dbus::blocking::Connection>,
-) -> Result<String, Box<Error>> {
+pub fn handle(opts: &CommandOptions, config: &DisplayConfig) -> Result<String, Box<Error>> {
     Ok(match &opts.connector {
         Some(connector) => {
             let physical_monitor = config
