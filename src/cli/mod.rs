@@ -43,9 +43,10 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let config = DisplayConfig::get_current_state(&proxy)?;
 
     // See what we're executing
-    let cmd = args
-        .cmd
-        .unwrap_or(Command::Query(query::CommandOptions { connector: None }));
+    let cmd = args.cmd.unwrap_or(Command::Query(query::CommandOptions {
+        connector: None,
+        summary: false,
+    }));
 
     print!(
         "{}",
