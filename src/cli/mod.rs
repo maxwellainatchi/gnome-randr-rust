@@ -3,7 +3,7 @@ use std::time::Duration;
 use dbus::blocking::Connection;
 use structopt::StructOpt;
 
-use crate::display_config::DisplayConfig;
+use gnome_randr::DisplayConfig;
 
 pub mod query;
 

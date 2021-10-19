@@ -1,5 +1,5 @@
 [package]
-name = "gnome-randr-rust"
+name = "gnome-randr"
 version = "0.1.0"
 edition = "2018"
 

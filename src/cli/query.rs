@@ -1,4 +1,4 @@
-use crate::display_config::DisplayConfig;
+use gnome_randr::DisplayConfig;
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
