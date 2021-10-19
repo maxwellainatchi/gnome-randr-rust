@@ -163,6 +163,30 @@ impl DisplayConfig {
             known_properties,
         }
     }
+
+    pub fn search(&self, connector: &str) -> Option<(&LogicalMonitor, &PhysicalMonitor)> {
+        let physical_monitor = self
+            .monitors
+            .iter()
+            .find(|monitor| monitor.connector == *connector);
+
+        let logical_monitor = self.logical_monitors.iter().find(|monitor| {
+            match monitor
+                .monitors
+                .iter()
+                .find(|pm| pm.connector == *connector)
+            {
+                Some(_) => true,
+                None => false,
+            }
+        });
+
+        physical_monitor
+            .map(|physical_monitor| {
+                logical_monitor.map(|logical_monitor| (logical_monitor, physical_monitor))
+            })
+            .flatten()
+    }
 }
 
 impl std::fmt::Display for DisplayConfig {

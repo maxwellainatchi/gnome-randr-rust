@@ -34,26 +34,8 @@ impl std::error::Error for Error {}
 pub fn handle(opts: &CommandOptions, config: &DisplayConfig) -> Result<String, Box<Error>> {
     Ok(match &opts.connector {
         Some(connector) => {
-            let physical_monitor = config
-                .monitors
-                .iter()
-                .find(|monitor| monitor.connector == *connector)
-                .ok_or(Error::NotFound)?;
-
-            let logical_monitor = config
-                .logical_monitors
-                .iter()
-                .find(|monitor| {
-                    match monitor
-                        .monitors
-                        .iter()
-                        .find(|pm| pm.connector == *connector)
-                    {
-                        Some(_) => true,
-                        None => false,
-                    }
-                })
-                .ok_or(Error::NotFound)?;
+            let (logical_monitor, physical_monitor) =
+                config.search(connector).ok_or(Error::NotFound)?;
 
             format!("{}\n{}", logical_monitor, physical_monitor)
         }
