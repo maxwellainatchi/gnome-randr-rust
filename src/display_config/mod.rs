@@ -187,29 +187,37 @@ impl DisplayConfig {
             })
             .flatten()
     }
+
+    pub fn format(&self, writer: &mut dyn std::fmt::Write, summary: bool) -> std::fmt::Result {
+        if !summary {
+            // Print known and unknown properties.
+            write!(writer, "{}", self.known_properties)?;
+            // TODO: this should be sorted
+            for (prop, value) in self.properties.iter() {
+                if !KNOWN_PROPERTY_KEYS.contains(&prop.as_str()) {
+                    writeln!(writer, "{}: {:?}", prop, &value.0)?;
+                }
+            }
+            writeln!(writer, "")?;
+        }
+
+        // Print logical monitors
+        for (i, monitor) in self.logical_monitors.iter().enumerate() {
+            writeln!(writer, "logical monitor {}:\n{}", i, monitor)?
+        }
+
+        if !summary {
+            for monitor in self.monitors.iter() {
+                writeln!(writer, "{}", monitor)?;
+            }
+        }
+
+        Ok(())
+    }
 }
 
 impl std::fmt::Display for DisplayConfig {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.known_properties)?;
-
-        // TODO: this should be sorted
-        for (prop, value) in self.properties.iter() {
-            if !KNOWN_PROPERTY_KEYS.contains(&prop.as_str()) {
-                writeln!(f, "{}: {:?}", prop, &value.0)?;
-            }
-        }
-        writeln!(f, "")?;
-
-        // Print logical monitors
-        for (i, monitor) in self.logical_monitors.iter().enumerate() {
-            writeln!(f, "logical monitor {}:\n{}", i, monitor)?
-        }
-
-        for monitor in self.monitors.iter() {
-            writeln!(f, "{}", monitor)?;
-        }
-
-        Ok(())
+        self.format(f, false)
     }
 }
