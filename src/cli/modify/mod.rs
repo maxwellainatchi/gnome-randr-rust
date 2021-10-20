@@ -1,5 +1,5 @@
 use gnome_randr::{
-    display_config::{self, logical_monitor::Transform, ApplyConfig},
+    display_config::{logical_monitor::Transform, ApplyConfig},
     DisplayConfig,
 };
 use structopt::StructOpt;
@@ -146,7 +146,7 @@ pub fn handle(
             })
             .collect();
 
-        config.apply_monitors_config(&proxy, all_configs)?;
+        config.apply_monitors_config(proxy, all_configs)?;
     }
 
     Ok(())

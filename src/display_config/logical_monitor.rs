@@ -117,11 +117,11 @@ pub struct LogicalMonitor {
 impl Clone for LogicalMonitor {
     fn clone(&self) -> Self {
         Self {
-            x: self.x.clone(),
-            y: self.y.clone(),
-            scale: self.scale.clone(),
-            transform: self.transform.clone(),
-            primary: self.primary.clone(),
+            x: self.x,
+            y: self.y,
+            scale: self.scale,
+            transform: self.transform,
+            primary: self.primary,
             monitors: self.monitors.clone(),
             properties: dbus::arg::PropMap::new(),
         }
@@ -149,7 +149,7 @@ impl LogicalMonitor {
             monitors: result
                 .5
                 .into_iter()
-                .map(|monitor| Monitor::from(monitor))
+                .map(Monitor::from)
                 .collect(),
             properties: result.6,
         }

@@ -145,7 +145,7 @@ impl KnownProperties {
                 .get("layout-mode")
                 .map(|val| val.0.as_u64())
                 .flatten()
-                .map_or(LayoutMode::Logical, |val| LayoutMode::from(val)),
+                .map_or(LayoutMode::Logical, LayoutMode::from),
             supports_changing_layout_mode: as_bool("supports-changing-layout-mode")
                 .unwrap_or(false),
             global_scale_required: as_bool("global-scale-required").unwrap_or(false),
@@ -155,18 +155,14 @@ impl KnownProperties {
 
 impl std::fmt::Display for KnownProperties {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "{}: {}", "supports-mirroring", self.supports_mirroring)?;
-        writeln!(f, "{}: {}", "layout-mode", self.layout_mode)?;
+        writeln!(f, "supports-mirroring: {}", self.supports_mirroring)?;
+        writeln!(f, "layout-mode: {}", self.layout_mode)?;
         writeln!(
             f,
-            "{}: {}",
-            "supports-changing-layout-mode", self.supports_changing_layout_mode
+            "supports-changing-layout-mode: {}",
+            self.supports_changing_layout_mode
         )?;
-        writeln!(
-            f,
-            "{}: {}",
-            "global-scale-required", self.global_scale_required
-        )?;
+        writeln!(f, "global-scale-required: {}", self.global_scale_required)?;
         Ok(())
     }
 }
@@ -215,16 +211,8 @@ impl DisplayConfig {
 
         DisplayConfig {
             serial: result.0,
-            monitors: result
-                .1
-                .into_iter()
-                .map(|monitor| PhysicalMonitor::from(monitor))
-                .collect(),
-            logical_monitors: result
-                .2
-                .into_iter()
-                .map(|monitor| LogicalMonitor::from(monitor))
-                .collect(),
+            monitors: result.1.into_iter().map(PhysicalMonitor::from).collect(),
+            logical_monitors: result.2.into_iter().map(LogicalMonitor::from).collect(),
             properties: all_properties
                 .into_iter()
                 .filter(|(key, _)| !KNOWN_PROPERTY_KEYS.contains(&key.as_str()))
@@ -240,14 +228,11 @@ impl DisplayConfig {
             .find(|monitor| monitor.connector == *connector);
 
         let logical_monitor = self.logical_monitors.iter().find(|monitor| {
-            match monitor
+            monitor
                 .monitors
                 .iter()
                 .find(|pm| pm.connector == *connector)
-            {
-                Some(_) => true,
-                None => false,
-            }
+                .is_some()
         });
 
         physical_monitor
@@ -287,7 +272,7 @@ impl DisplayConfig {
                     writeln!(writer, "{}: {:?}", prop, &value.0)?;
                 }
             }
-            writeln!(writer, "")?;
+            writeln!(writer)?;
         }
 
         // Print logical monitors
