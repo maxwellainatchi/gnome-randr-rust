@@ -9,6 +9,22 @@
 			],
 			"group": "build",
 			"label": "rust: cargo build"
+		},
+		{
+			"type": "cargo",
+			"command": "run",
+			"args": [
+				"--",
+				"modify",
+				"HDMI-1",
+				"--rotate",
+				"left"
+			],
+			"problemMatcher": [
+				"$rustc"
+			],
+			"group": "build",
+			"label": "modify"
 		}
 	]
 }
