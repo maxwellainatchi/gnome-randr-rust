@@ -50,13 +50,10 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
         summary: false,
     }));
 
-    print!(
-        "{}",
-        match cmd {
-            Command::Query(opts) => query::handle(&opts, &config)?,
-            Command::Modify(opts) => modify::handle(&opts, &config)?,
-        }
-    );
+    match cmd {
+        Command::Query(opts) => print!("{}", query::handle(&opts, &config)?),
+        Command::Modify(opts) => modify::handle(&opts, &config, &proxy)?,
+    }
 
     Ok(())
 }
