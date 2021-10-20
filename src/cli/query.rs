@@ -53,7 +53,7 @@ pub fn handle(
             if opts.summary {
                 let mut s = String::new();
                 config.format(&mut s, true)?;
-                format!("{}", s)
+                s.to_string()
             } else {
                 format!("{}", config)
             }

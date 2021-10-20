@@ -3,7 +3,7 @@ use std::fmt::{self};
 use bitflags::bitflags;
 
 // monitors displaying this logical monitor
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Monitor {
     // name of the connector (e.g. DP-1, eDP-1 etc)
     pub connector: String,
@@ -114,6 +114,20 @@ pub struct LogicalMonitor {
     pub properties: dbus::arg::PropMap,
 }
 
+impl Clone for LogicalMonitor {
+    fn clone(&self) -> Self {
+        Self {
+            x: self.x,
+            y: self.y,
+            scale: self.scale,
+            transform: self.transform,
+            primary: self.primary,
+            monitors: self.monitors.clone(),
+            properties: dbus::arg::PropMap::new(),
+        }
+    }
+}
+
 impl LogicalMonitor {
     pub fn from(
         result: (
@@ -135,10 +149,40 @@ impl LogicalMonitor {
             monitors: result
                 .5
                 .into_iter()
-                .map(|monitor| Monitor::from(monitor))
+                .map(Monitor::from)
                 .collect(),
             properties: result.6,
         }
+    }
+
+    pub fn to_result<'a>(
+        &self,
+        mode_id: &'a str,
+    ) -> (
+        i32,
+        i32,
+        f64,
+        u32,
+        bool,
+        Vec<(&str, &'a str, dbus::arg::PropMap)>,
+    ) {
+        (
+            self.x,
+            self.y,
+            self.scale,
+            self.transform.bits(),
+            self.primary,
+            self.monitors
+                .iter()
+                .map(|monitor| {
+                    (
+                        monitor.connector.as_str(),
+                        mode_id,
+                        dbus::arg::PropMap::new(),
+                    )
+                })
+                .collect(),
+        )
     }
 }
 

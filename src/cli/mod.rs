@@ -5,6 +5,7 @@ use structopt::StructOpt;
 
 use gnome_randr::DisplayConfig;
 
+pub mod modify;
 pub mod query;
 
 #[derive(StructOpt)]
@@ -13,6 +14,7 @@ enum Command {
         about = "Query returns information about the current state of the monitors. This is the default subcommand."
     )]
     Query(query::CommandOptions),
+    Modify(modify::CommandOptions),
 }
 
 #[derive(StructOpt)]
@@ -48,12 +50,10 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
         summary: false,
     }));
 
-    print!(
-        "{}",
-        match cmd {
-            Command::Query(opts) => query::handle(&opts, &config)?,
-        }
-    );
+    match cmd {
+        Command::Query(opts) => print!("{}", query::handle(&opts, &config)?),
+        Command::Modify(opts) => modify::handle(&opts, &config, &proxy)?,
+    }
 
     Ok(())
 }

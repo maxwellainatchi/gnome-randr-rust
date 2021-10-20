@@ -157,7 +157,7 @@ impl PhysicalMonitor {
             vendor: result.0 .1,
             product: result.0 .2,
             serial: result.0 .3,
-            modes: result.1.into_iter().map(|mode| Mode::from(mode)).collect(),
+            modes: result.1.into_iter().map(Mode::from).collect(),
             properties: result.2,
         }
     }
