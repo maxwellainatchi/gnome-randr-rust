@@ -1,5 +1,5 @@
 use gnome_randr::{
-    display_config::{logical_monitor::Transform, ApplyConfig},
+    display_config::{logical_monitor::Transform, physical_monitor::PhysicalMonitor, ApplyConfig},
     DisplayConfig,
 };
 use structopt::StructOpt;
@@ -50,12 +50,20 @@ pub struct CommandOptions {
     pub connector: String,
 
     #[structopt(
-        short = "r",
+        short,
         long = "rotate",
-        help = "Rotation can be one of 'normal', 'left', 'right' or 'inverted'",
-        long_help = "Rotation can be one of 'normal', 'left', 'right' or 'inverted'. This causes the output contents to be rotated in the specified direction. 'right' specifies a clockwise rotation of the picture and 'left' specifies a counter-clockwise rotation."
+        help = "One of 'normal', 'left', 'right' or 'inverted'",
+        long_help = "One of 'normal', 'left', 'right' or 'inverted'. This causes the output contents to be rotated in the specified direction. 'right' specifies a clockwise rotation of the picture and 'left' specifies a counter-clockwise rotation."
     )]
     pub rotation: Option<Rotation>,
+
+    #[structopt(
+        short,
+        long,
+        help = "A valid mode for the given display.",
+        long_help = "A valid mode for the given display. To find valid modes use the \"query\" subcommand"
+    )]
+    pub mode: Option<String>,
 }
 
 #[derive(Debug)]
@@ -77,17 +85,16 @@ impl std::fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
-trait Action: std::fmt::Display {
-    fn apply(&self, config: &mut ApplyConfig);
+trait Action<'a>: std::fmt::Display {
+    fn apply(&self, config: &mut ApplyConfig<'a>, physical_monitor: &PhysicalMonitor);
 }
 
 struct RotationAction {
     rotation: Rotation,
 }
 
-impl Action for RotationAction {
-    fn apply(&self, config: &mut ApplyConfig) {
-        println!("{}", self);
+impl Action<'_> for RotationAction {
+    fn apply(&self, config: &mut ApplyConfig, _: &PhysicalMonitor) {
         config.transform = match self.rotation {
             Rotation::Normal => Transform::NORMAL,
             Rotation::Left => Transform::R270,
@@ -101,6 +108,27 @@ impl Action for RotationAction {
 impl std::fmt::Display for RotationAction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "setting rotation to {}", self.rotation)
+    }
+}
+
+struct ModeAction<'a> {
+    mode: &'a str,
+}
+
+impl<'a> Action<'a> for ModeAction<'a> {
+    fn apply(&self, config: &mut ApplyConfig<'a>, physical_monitor: &PhysicalMonitor) {
+        config
+            .monitors
+            .iter_mut()
+            .find(|monitor| monitor.connector == physical_monitor.connector)
+            .unwrap()
+            .mode_id = self.mode;
+    }
+}
+
+impl std::fmt::Display for ModeAction<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "setting mode to {}", self.mode)
     }
 }
 
@@ -120,13 +148,18 @@ pub fn handle(
         }));
     }
 
+    if let Some(mode_id) = &opts.mode {
+        actions.push(Box::new(ModeAction { mode: mode_id }))
+    }
+
     if actions.is_empty() {
         println!("no changes made.");
     } else {
         let mut apply_config = ApplyConfig::from(logical_monitor, physical_monitor);
 
         for action in actions.iter() {
-            action.apply(&mut apply_config);
+            println!("{}", &action);
+            action.apply(&mut apply_config, physical_monitor);
         }
 
         let all_configs = config
