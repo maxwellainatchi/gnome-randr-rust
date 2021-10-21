@@ -79,10 +79,12 @@ impl std::fmt::Display for Mode {
                 format!("{:<width$}", val, width = width)
             }
         }
+
         write!(
             f,
-            "{}\t{}\t{}",
-            column(format!("{}x{}", self.width, self.height), 10, true),
+            "{}\t{}\t{}\t{}",
+            column(format!("{}", self.id), 30, true),
+            column(format!("{}x{}", self.width, self.height), 10, false),
             column(
                 format!(
                     "{:.2}{}{}",

@@ -1,78 +1,11 @@
 pub mod logical_monitor;
 pub mod physical_monitor;
+pub mod proxied_methods;
 mod raw;
 
 use logical_monitor::LogicalMonitor;
 use physical_monitor::PhysicalMonitor;
-
-#[derive(Debug, Clone, Copy)]
-pub struct ApplyMonitor<'a> {
-    pub connector: &'a str,
-    pub mode_id: &'a str,
-}
-
-impl ApplyMonitor<'_> {
-    pub fn serialize(&self) -> (&str, &str, dbus::arg::PropMap) {
-        (self.connector, self.mode_id, dbus::arg::PropMap::new())
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct ApplyConfig<'a> {
-    pub x_pos: i32,
-    pub y_pos: i32,
-    pub scale: f64,
-    pub transform: u32,
-    pub primary: bool,
-    pub monitors: Vec<ApplyMonitor<'a>>,
-}
-
-impl ApplyConfig<'_> {
-    pub fn from<'a>(
-        logical_monitor: &LogicalMonitor,
-        physical_monitor: &'a PhysicalMonitor,
-    ) -> ApplyConfig<'a> {
-        ApplyConfig {
-            x_pos: logical_monitor.x,
-            y_pos: logical_monitor.y,
-            scale: logical_monitor.scale,
-            transform: logical_monitor.transform.bits(),
-            primary: logical_monitor.primary,
-            monitors: vec![ApplyMonitor {
-                connector: &physical_monitor.connector,
-                mode_id: &physical_monitor
-                    .modes
-                    .iter()
-                    .find(|mode| mode.known_properties.is_current)
-                    .unwrap()
-                    .id,
-            }],
-        }
-    }
-
-    pub fn serialize(
-        &self,
-    ) -> (
-        i32,
-        i32,
-        f64,
-        u32,
-        bool,
-        Vec<(&str, &str, dbus::arg::PropMap)>,
-    ) {
-        (
-            self.x_pos,
-            self.y_pos,
-            self.scale,
-            self.transform,
-            self.primary,
-            self.monitors
-                .iter()
-                .map(|monitor| monitor.serialize())
-                .collect(),
-        )
-    }
-}
+pub use proxied_methods::{ApplyConfig, ApplyMonitor};
 
 // Config properties/comments are sourced from https://github.com/jadahl/gnome-monitor-config/blob/master/src/org.gnome.Mutter.DisplayConfig.xml
 
@@ -177,15 +110,6 @@ pub struct DisplayConfig {
 }
 
 impl DisplayConfig {
-    pub fn get_current_state(
-        proxy: &dbus::blocking::Proxy<&dbus::blocking::Connection>,
-    ) -> Result<DisplayConfig, dbus::Error> {
-        use raw::OrgGnomeMutterDisplayConfig;
-
-        let raw_output = proxy.get_current_state()?;
-        Ok(DisplayConfig::from(raw_output))
-    }
-
     fn from(
         result: (
             u32,
@@ -240,26 +164,6 @@ impl DisplayConfig {
                 logical_monitor.map(|logical_monitor| (logical_monitor, physical_monitor))
             })
             .flatten()
-    }
-
-    pub fn apply_monitors_config(
-        &self,
-        proxy: &dbus::blocking::Proxy<&dbus::blocking::Connection>,
-        configs: Vec<ApplyConfig>,
-    ) -> Result<(), dbus::Error> {
-        use raw::OrgGnomeMutterDisplayConfig;
-
-        let result = proxy.apply_monitors_config(
-            self.serial,
-            1, /* Temporary */
-            configs.iter().map(|config| config.serialize()).collect(),
-            dbus::arg::PropMap::new(),
-        );
-
-        if let Err(err) = &result {
-            println!("{:?}", err);
-        }
-        result
     }
 
     pub fn format(&self, writer: &mut dyn std::fmt::Write, summary: bool) -> std::fmt::Result {
