@@ -64,6 +64,9 @@ pub struct CommandOptions {
         long_help = "A valid mode for the given display. To find valid modes use the \"query\" subcommand"
     )]
     pub mode: Option<String>,
+
+    #[structopt(long, help = "Set the given monitor as the primary logical monitor")]
+    pub primary: bool,
 }
 
 #[derive(Debug)]
@@ -132,6 +135,20 @@ impl std::fmt::Display for ModeAction<'_> {
     }
 }
 
+struct PrimaryAction {}
+
+impl<'a> Action<'a> for PrimaryAction {
+    fn apply(&self, config: &mut ApplyConfig<'a>, _: &PhysicalMonitor) {
+        config.primary = true;
+    }
+}
+
+impl std::fmt::Display for PrimaryAction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "setting monitor as primary")
+    }
+}
+
 pub fn handle(
     opts: &CommandOptions,
     config: &DisplayConfig,
@@ -141,6 +158,7 @@ pub fn handle(
         config.search(&opts.connector).ok_or(Error::NotFound)?;
 
     let mut actions = Vec::<Box<dyn Action>>::new();
+    let mut primary_is_changing = false;
 
     if let Some(rotation) = &opts.rotation {
         actions.push(Box::new(RotationAction {
@@ -150,6 +168,11 @@ pub fn handle(
 
     if let Some(mode_id) = &opts.mode {
         actions.push(Box::new(ModeAction { mode: mode_id }))
+    }
+
+    if opts.primary {
+        actions.push(Box::new(PrimaryAction {}));
+        primary_is_changing = true;
     }
 
     if actions.is_empty() {
@@ -175,7 +198,13 @@ pub fn handle(
                     None => return None,
                 };
 
-                Some(ApplyConfig::from(logical_monitor, monitor))
+                let mut apply_config = ApplyConfig::from(logical_monitor, monitor);
+
+                if primary_is_changing {
+                    apply_config.primary = false;
+                }
+
+                Some(apply_config)
             })
             .collect();
 
