@@ -3,7 +3,7 @@ mod actions;
 use gnome_randr::{display_config::ApplyConfig, DisplayConfig};
 use structopt::StructOpt;
 
-use self::actions::{Action, ModeAction, PrimaryAction, RotationAction};
+use self::actions::{Action, ModeAction, PrimaryAction, RotationAction, ScaleAction};
 
 #[derive(Clone, Copy)]
 pub enum Rotation {
@@ -68,6 +68,9 @@ pub struct CommandOptions {
 
     #[structopt(long, help = "Set the given monitor as the primary logical monitor")]
     pub primary: bool,
+
+    #[structopt(long, help = "Set the scale")]
+    pub scale: Option<f64>,
 }
 
 #[derive(Debug)]
@@ -112,6 +115,10 @@ pub fn handle(
 
     if opts.primary {
         actions.push(Box::new(PrimaryAction {}));
+    }
+
+    if let Some(scale) = &opts.scale {
+        actions.push(Box::new(ScaleAction { scale: *scale }))
     }
 
     if actions.is_empty() {
