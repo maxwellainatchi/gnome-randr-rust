@@ -71,6 +71,14 @@ pub struct CommandOptions {
 
     #[structopt(long, help = "Set the scale")]
     pub scale: Option<f64>,
+
+    #[structopt(
+        short,
+        long,
+        help = "Attempt to replicate this configuration the next time this HW layout appears",
+        env
+    )]
+    persistent: bool,
 }
 
 #[derive(Debug)]
@@ -125,7 +133,12 @@ pub fn handle(
         println!("no changes made.");
         return Ok(());
     }
+
     let mut apply_config = ApplyConfig::from(logical_monitor, physical_monitor);
+
+    if opts.persistent {
+        println!("attempting to persist config to disk")
+    }
 
     for action in actions.iter() {
         println!("{}", &action);
@@ -155,7 +168,7 @@ pub fn handle(
         })
         .collect();
 
-    config.apply_monitors_config(proxy, all_configs)?;
+    config.apply_monitors_config(proxy, all_configs, opts.persistent)?;
 
     Ok(())
 }

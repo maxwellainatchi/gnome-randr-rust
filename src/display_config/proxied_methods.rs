@@ -72,12 +72,13 @@ impl DisplayConfig {
         &self,
         proxy: &Proxy<&Connection>,
         configs: Vec<ApplyConfig>,
+        persistent: bool,
     ) -> Result<()> {
         use super::raw::OrgGnomeMutterDisplayConfig;
 
         let result = proxy.apply_monitors_config(
             self.serial,
-            1, /* Temporary */
+            if persistent { 2 } else { 1 },
             configs.iter().map(|config| config.serialize()).collect(),
             PropMap::new(),
         );
