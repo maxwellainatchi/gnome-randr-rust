@@ -1,8 +1,9 @@
-use gnome_randr::{
-    display_config::{logical_monitor::Transform, physical_monitor::PhysicalMonitor, ApplyConfig},
-    DisplayConfig,
-};
+mod actions;
+
+use gnome_randr::{display_config::ApplyConfig, DisplayConfig};
 use structopt::StructOpt;
+
+use self::actions::{Action, ModeAction, PrimaryAction, RotationAction};
 
 #[derive(Clone, Copy)]
 pub enum Rotation {
@@ -88,67 +89,6 @@ impl std::fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
-trait Action<'a>: std::fmt::Display {
-    fn apply(&self, config: &mut ApplyConfig<'a>, physical_monitor: &PhysicalMonitor);
-}
-
-struct RotationAction {
-    rotation: Rotation,
-}
-
-impl Action<'_> for RotationAction {
-    fn apply(&self, config: &mut ApplyConfig, _: &PhysicalMonitor) {
-        config.transform = match self.rotation {
-            Rotation::Normal => Transform::NORMAL,
-            Rotation::Left => Transform::R270,
-            Rotation::Right => Transform::R90,
-            Rotation::Inverted => Transform::R180,
-        }
-        .bits();
-    }
-}
-
-impl std::fmt::Display for RotationAction {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "setting rotation to {}", self.rotation)
-    }
-}
-
-struct ModeAction<'a> {
-    mode: &'a str,
-}
-
-impl<'a> Action<'a> for ModeAction<'a> {
-    fn apply(&self, config: &mut ApplyConfig<'a>, physical_monitor: &PhysicalMonitor) {
-        config
-            .monitors
-            .iter_mut()
-            .find(|monitor| monitor.connector == physical_monitor.connector)
-            .unwrap()
-            .mode_id = self.mode;
-    }
-}
-
-impl std::fmt::Display for ModeAction<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "setting mode to {}", self.mode)
-    }
-}
-
-struct PrimaryAction {}
-
-impl<'a> Action<'a> for PrimaryAction {
-    fn apply(&self, config: &mut ApplyConfig<'a>, _: &PhysicalMonitor) {
-        config.primary = true;
-    }
-}
-
-impl std::fmt::Display for PrimaryAction {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "setting monitor as primary")
-    }
-}
-
 pub fn handle(
     opts: &CommandOptions,
     config: &DisplayConfig,
@@ -158,7 +98,7 @@ pub fn handle(
         config.search(&opts.connector).ok_or(Error::NotFound)?;
 
     let mut actions = Vec::<Box<dyn Action>>::new();
-    let mut primary_is_changing = false;
+    let primary_is_changing = opts.primary;
 
     if let Some(rotation) = &opts.rotation {
         actions.push(Box::new(RotationAction {
@@ -172,44 +112,43 @@ pub fn handle(
 
     if opts.primary {
         actions.push(Box::new(PrimaryAction {}));
-        primary_is_changing = true;
     }
 
     if actions.is_empty() {
         println!("no changes made.");
-    } else {
-        let mut apply_config = ApplyConfig::from(logical_monitor, physical_monitor);
-
-        for action in actions.iter() {
-            println!("{}", &action);
-            action.apply(&mut apply_config, physical_monitor);
-        }
-
-        let all_configs = config
-            .monitors
-            .iter()
-            .filter_map(|monitor| {
-                if monitor.connector == opts.connector {
-                    return Some(apply_config.clone());
-                }
-
-                let (logical_monitor, _) = match config.search(&monitor.connector) {
-                    Some(monitors) => monitors,
-                    None => return None,
-                };
-
-                let mut apply_config = ApplyConfig::from(logical_monitor, monitor);
-
-                if primary_is_changing {
-                    apply_config.primary = false;
-                }
-
-                Some(apply_config)
-            })
-            .collect();
-
-        config.apply_monitors_config(proxy, all_configs)?;
+        return Ok(());
     }
+    let mut apply_config = ApplyConfig::from(logical_monitor, physical_monitor);
+
+    for action in actions.iter() {
+        println!("{}", &action);
+        action.apply(&mut apply_config, physical_monitor);
+    }
+
+    let all_configs = config
+        .monitors
+        .iter()
+        .filter_map(|monitor| {
+            if monitor.connector == opts.connector {
+                return Some(apply_config.clone());
+            }
+
+            let (logical_monitor, _) = match config.search(&monitor.connector) {
+                Some(monitors) => monitors,
+                None => return None,
+            };
+
+            let mut apply_config = ApplyConfig::from(logical_monitor, monitor);
+
+            if primary_is_changing {
+                apply_config.primary = false;
+            }
+
+            Some(apply_config)
+        })
+        .collect();
+
+    config.apply_monitors_config(proxy, all_configs)?;
 
     Ok(())
 }
