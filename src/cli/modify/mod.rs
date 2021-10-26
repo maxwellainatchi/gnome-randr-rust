@@ -81,10 +81,12 @@ pub struct CommandOptions {
     #[structopt(
         short,
         long,
-        help = "Attempt to replicate this configuration the next time this HW layout appears",
-        env
+        help = "Attempt to replicate this configuration the next time this HW layout appears"
     )]
     persistent: bool,
+
+    #[structopt(long, help = "List changes without actually applying them")]
+    dry_run: bool,
 }
 
 #[derive(Debug)]
@@ -149,6 +151,11 @@ pub fn handle(
     for action in actions.iter() {
         println!("{}", &action);
         action.apply(&mut apply_config, physical_monitor);
+    }
+
+    if opts.dry_run {
+        println!("dry run: no changes made.");
+        return Ok(());
     }
 
     let all_configs = config
