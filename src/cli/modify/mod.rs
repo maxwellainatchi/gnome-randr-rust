@@ -43,13 +43,7 @@ impl std::fmt::Display for Rotation {
 }
 
 #[derive(StructOpt)]
-pub struct CommandOptions {
-    #[structopt(
-        help = "the connector used for the physical monitor.",
-        long_help = "the connector used for the physical monitor you want to modify, e.g. \"HDMI-1\". You can find these with \"query\" (no arguments) if you're unsure."
-    )]
-    pub connector: String,
-
+pub struct ActionOptions {
     #[structopt(
         short,
         long = "rotate",
@@ -71,6 +65,18 @@ pub struct CommandOptions {
 
     #[structopt(long, help = "Set the scale")]
     pub scale: Option<f64>,
+}
+
+#[derive(StructOpt)]
+pub struct CommandOptions {
+    #[structopt(
+        help = "the connector used for the physical monitor.",
+        long_help = "the connector used for the physical monitor you want to modify, e.g. \"HDMI-1\". You can find these with \"query\" (no arguments) if you're unsure."
+    )]
+    pub connector: String,
+
+    #[structopt(flatten)]
+    pub actions: ActionOptions,
 
     #[structopt(
         short,
@@ -109,23 +115,23 @@ pub fn handle(
         config.search(&opts.connector).ok_or(Error::NotFound)?;
 
     let mut actions = Vec::<Box<dyn Action>>::new();
-    let primary_is_changing = opts.primary;
+    let primary_is_changing = opts.actions.primary;
 
-    if let Some(rotation) = &opts.rotation {
+    if let Some(rotation) = &opts.actions.rotation {
         actions.push(Box::new(RotationAction {
             rotation: *rotation,
         }));
     }
 
-    if let Some(mode_id) = &opts.mode {
+    if let Some(mode_id) = &opts.actions.mode {
         actions.push(Box::new(ModeAction { mode: mode_id }))
     }
 
-    if opts.primary {
+    if opts.actions.primary {
         actions.push(Box::new(PrimaryAction {}));
     }
 
-    if let Some(scale) = &opts.scale {
+    if let Some(scale) = &opts.actions.scale {
         actions.push(Box::new(ScaleAction { scale: *scale }))
     }
 
