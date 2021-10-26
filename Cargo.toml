@@ -1,13 +1,13 @@
 [package]
 name = "gnome-randr"
 edition = "2018"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["savedbythezsh <savedbythezsh@gmail.com>"]
 license = "MIT"
 description = "A reimplementation of xrandr for Gnome on Wayland"
 readme = "README.md"
-homepage = "https://github.com/maxwellainatchi/gnome-xrandr-rust"
-repository = "https://github.com/maxwellainatchi/gnome-xrandr-rust"
+homepage = "https://github.com/maxwellainatchi/gnome-randr-rust"
+repository = "https://github.com/maxwellainatchi/gnome-randr-rust"
 keywords = ["cli", "displays", "xrandr", "gnome", "wayland"]
 categories = ["command-line-utilities", "config"]
 
