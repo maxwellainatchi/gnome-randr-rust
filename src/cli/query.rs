@@ -4,8 +4,6 @@ use structopt::StructOpt;
 #[derive(StructOpt)]
 pub struct CommandOptions {
     #[structopt(
-        short,
-        long,
         help = "the connector used for the physical monitor.",
         long_help = "query by the connector used for the physical monitor, e.g. \"HDMI-1\". You can find these with \"query\" (no arguments) if you're unsure."
     )]
