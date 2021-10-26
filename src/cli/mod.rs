@@ -14,6 +14,7 @@ enum Command {
         about = "Query returns information about the current state of the monitors. This is the default subcommand."
     )]
     Query(query::CommandOptions),
+    #[structopt(about = "Modify allows you to alter the current display configuration.")]
     Modify(modify::CommandOptions),
 }
 
