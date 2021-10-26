@@ -1,9 +1,15 @@
 [package]
 name = "gnome-randr"
-version = "0.1.0"
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+version = "0.1.0"
+authors = ["savedbythezsh <savedbythezsh@gmail.com>"]
+license = "MIT"
+description = "A reimplementation of xrandr for Gnome on Wayland"
+readme = "README.md"
+homepage = "https://github.com/maxwellainatchi/gnome-xrandr-rust"
+repository = "https://github.com/maxwellainatchi/gnome-xrandr-rust"
+keywords = ["cli", "displays", "xrandr", "gnome", "wayland"]
+categories = ["command-line-utilities", "config"]
 
 [dependencies]
 dbus = "0.9.5"
