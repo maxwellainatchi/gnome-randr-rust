@@ -200,10 +200,8 @@ fn get_gamma_info(crtc_gamma: &Gamma) -> GammaInfo {
             ((v2.ln() * i1.ln() - v1.ln() * i2.ln()) / (i1 / i2).ln()).exp()
         };
 
-        println!("{}", brightness);
-
         let calc = |channel: &Vec<u16>, last: usize| {
-            1.0 / (channel[last / 2] as f64 / brightness / 65535.0).ln()
+            (channel[last / 2] as f64 / brightness / 65535.0).ln()
                 / (((last / 2) + 1) as f64 / size as f64).ln()
         };
         GammaInfo {
