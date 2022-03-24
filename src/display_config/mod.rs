@@ -1,6 +1,10 @@
+pub mod crtc;
 pub mod logical_monitor;
+pub mod output;
 pub mod physical_monitor;
 pub mod proxied_methods;
+pub mod resources;
+
 mod raw;
 
 use logical_monitor::LogicalMonitor;
