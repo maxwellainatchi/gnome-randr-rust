@@ -1,5 +1,4 @@
-use super::crtc::Crtc;
-use super::output::Output;
+use super::models::{Crtc, Output};
 
 /**
  * A mode represents a set of parameters that are applied to each output, such as resolution and refresh rate.

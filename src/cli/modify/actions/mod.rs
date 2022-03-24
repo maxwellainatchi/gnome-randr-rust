@@ -3,7 +3,7 @@ mod primary;
 mod rotation;
 mod scale;
 
-use gnome_randr::display_config::{physical_monitor::PhysicalMonitor, ApplyConfig};
+use gnome_randr::display_config::{models::PhysicalMonitor, ApplyConfig};
 
 pub use mode::ModeAction;
 pub use primary::PrimaryAction;

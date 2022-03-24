@@ -1,14 +1,11 @@
-pub mod crtc;
-pub mod logical_monitor;
-pub mod output;
-pub mod physical_monitor;
+pub mod models;
 pub mod proxied_methods;
 pub mod resources;
 
 mod raw;
 
-use logical_monitor::LogicalMonitor;
-use physical_monitor::PhysicalMonitor;
+use models::LogicalMonitor;
+use models::PhysicalMonitor;
 pub use proxied_methods::{ApplyConfig, ApplyMonitor};
 
 // Config properties/comments are sourced from https://github.com/jadahl/gnome-monitor-config/blob/master/src/org.gnome.Mutter.DisplayConfig.xml

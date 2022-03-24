@@ -1,5 +1,6 @@
 use gnome_randr::display_config::{
-    logical_monitor::Transform, physical_monitor::PhysicalMonitor, ApplyConfig,
+    models::{logical_monitor::Transform, PhysicalMonitor},
+    ApplyConfig,
 };
 
 use super::{super::Rotation, Action};

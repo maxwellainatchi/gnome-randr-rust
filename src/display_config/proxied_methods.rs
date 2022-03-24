@@ -4,8 +4,9 @@ use dbus::{
 };
 
 use super::{
-    crtc::Crtc, logical_monitor::LogicalMonitor, physical_monitor::PhysicalMonitor,
-    resources::Resources, DisplayConfig,
+    models::{Crtc, LogicalMonitor, PhysicalMonitor},
+    resources::Resources,
+    DisplayConfig,
 };
 
 type Result<T> = std::prelude::rust_2021::Result<T, dbus::Error>;
