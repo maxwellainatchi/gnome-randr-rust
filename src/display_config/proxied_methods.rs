@@ -4,6 +4,8 @@ use dbus::{
 };
 
 use super::{logical_monitor::LogicalMonitor, physical_monitor::PhysicalMonitor, DisplayConfig};
+use super::monitor_models::Transform;
+
 
 type Result<T> = std::prelude::rust_2021::Result<T, dbus::Error>;
 
@@ -21,10 +23,7 @@ impl ApplyMonitor<'_> {
 
 #[derive(Debug, Clone)]
 pub struct ApplyConfig<'a> {
-    pub x_pos: i32,
-    pub y_pos: i32,
-    pub scale: f64,
-    pub transform: u32,
+    pub transform: Transform,
     pub primary: bool,
     pub monitors: Vec<ApplyMonitor<'a>>,
 }
@@ -35,13 +34,10 @@ impl ApplyConfig<'_> {
         physical_monitor: &'a PhysicalMonitor,
     ) -> ApplyConfig<'a> {
         ApplyConfig {
-            x_pos: logical_monitor.x,
-            y_pos: logical_monitor.y,
-            scale: logical_monitor.scale,
-            transform: logical_monitor.transform.bits(),
+            transform: logical_monitor.transform.clone(),
             primary: logical_monitor.primary,
             monitors: vec![ApplyMonitor {
-                connector: &physical_monitor.connector,
+                connector: &physical_monitor.monitor_description.connector,
                 mode_id: &physical_monitor
                     .modes
                     .iter()
@@ -54,10 +50,10 @@ impl ApplyConfig<'_> {
 
     pub fn serialize(&self) -> (i32, i32, f64, u32, bool, Vec<(&str, &str, PropMap)>) {
         (
-            self.x_pos,
-            self.y_pos,
-            self.scale,
-            self.transform,
+            self.transform.displacement.x,
+            self.transform.displacement.y,
+            self.transform.displacement.scale,
+            self.transform.orientation.bits(),
             self.primary,
             self.monitors
                 .iter()

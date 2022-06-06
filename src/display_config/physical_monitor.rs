@@ -1,3 +1,5 @@
+use super::monitor_models::MonitorDescription;
+
 #[derive(Debug)]
 pub struct KnownModeProperties {
     pub is_current: bool,
@@ -114,14 +116,10 @@ impl std::fmt::Display for Mode {
 /// represent connected physical monitors
 #[derive(Debug)]
 pub struct PhysicalMonitor {
-    // connector name (e.g. HDMI-1, DP-1, etc)
-    pub connector: String,
-    // vendor name
-    pub vendor: String,
-    // product name
-    pub product: String,
-    // product serial
-    pub serial: String,
+    // Information about the underlying monitor;
+    pub monitor_description: MonitorDescription,
+
+
     // available modes
     pub modes: Vec<Mode>,
 
@@ -155,10 +153,7 @@ impl PhysicalMonitor {
         ),
     ) -> PhysicalMonitor {
         PhysicalMonitor {
-            connector: result.0 .0,
-            vendor: result.0 .1,
-            product: result.0 .2,
-            serial: result.0 .3,
+            monitor_description: MonitorDescription::from(result.0),
             modes: result.1.into_iter().map(Mode::from).collect(),
             properties: result.2,
         }
@@ -167,11 +162,7 @@ impl PhysicalMonitor {
 
 impl std::fmt::Display for PhysicalMonitor {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(
-            f,
-            "{} {} {} {}",
-            self.connector, self.vendor, self.product, self.serial
-        )?;
+        writeln!(f, "{}", self.monitor_description)?;
 
         for mode in self.modes.iter() {
             writeln!(f, "{}", &mode)?;
