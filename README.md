@@ -4,7 +4,7 @@ A reimplementation of `xrandr` for Gnome on Wayland, especially for systems that
 
 ## Installation
 
-Installation requires `cargo`, part of the Rust toolchain. [Cargo/Rust installation instructions](https://doc.rust-lang.org/cargo/getting-started/installation.html).
+Installation requires `pkg-config` and `cargo`, part of the Rust toolchain. [Cargo/Rust installation instructions](https://doc.rust-lang.org/cargo/getting-started/installation.html).
 
 To install this tool, run `cargo install gnome-randr`. A library is also exposed for use in other Rust programs.
 
