@@ -8,7 +8,7 @@ pub struct ScaleAction {
 
 impl Action<'_> for ScaleAction {
     fn apply(&self, config: &mut ApplyConfig, _: &PhysicalMonitor) {
-        config.scale = self.scale;
+        config.transform.displacement.scale = self.scale;
     }
 }
 
