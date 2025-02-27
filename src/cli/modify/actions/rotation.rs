@@ -1,27 +1,21 @@
 use gnome_randr::display_config::{
-    logical_monitor::Transform, physical_monitor::PhysicalMonitor, ApplyConfig,
+    physical_monitor::PhysicalMonitor, ApplyConfig, monitor_models::transform::Orientation,
 };
 
-use super::{super::Rotation, Action};
+use super::{Action};
 
-pub struct RotationAction {
-    pub rotation: Rotation,
+pub struct OrientationAction {
+    pub orientation: Orientation
 }
 
-impl Action<'_> for RotationAction {
+impl Action<'_> for OrientationAction {
     fn apply(&self, config: &mut ApplyConfig, _: &PhysicalMonitor) {
-        config.transform = match self.rotation {
-            Rotation::Normal => Transform::NORMAL,
-            Rotation::Left => Transform::R270,
-            Rotation::Right => Transform::R90,
-            Rotation::Inverted => Transform::R180,
-        }
-        .bits();
+        config.transform.orientation = self.orientation;
     }
 }
 
-impl std::fmt::Display for RotationAction {
+impl std::fmt::Display for OrientationAction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "setting rotation to {}", self.rotation)
+        write!(f, "setting rotation to {}", self.orientation)
     }
 }
