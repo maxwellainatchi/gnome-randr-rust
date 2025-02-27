@@ -1,6 +1,9 @@
 # gnome-randr-rust
 
-A reimplementation of `xrandr` for Gnome on Wayland, especially for systems that don't support `wlr-output-management-unstable-v1`  (e.g. Manjaro). Written ground-up in rust for performance. This is also my first project in rust, so any suggestions are welcome!
+A reimplementation of `xrandr` for Gnome on Wayland, especially for systems that don't support `wlr-output-management-unstable-v1`  (e.g. Manjaro). Written ground-up in Rust for performance and fun. This is also my first project in rust, so any suggestions are welcome!
+
+> [!NOTE]  
+> I currently am not able to maintain this, as I no longer have access to a working Linux machine. If someone is interested in maintaining, please let me know!
 
 ## Installation
 
