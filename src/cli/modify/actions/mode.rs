@@ -11,7 +11,7 @@ impl<'a> Action<'a> for ModeAction<'a> {
         config
             .monitors
             .iter_mut()
-            .find(|monitor| monitor.connector == physical_monitor.connector)
+            .find(|monitor| monitor.connector == physical_monitor.monitor_description.connector)
             .unwrap()
             .mode_id = self.mode;
     }

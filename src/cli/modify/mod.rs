@@ -1,56 +1,20 @@
 mod actions;
 
-use gnome_randr::{display_config::ApplyConfig, DisplayConfig};
+use gnome_randr::{display_config::{ApplyConfig, monitor_models::transform::{Orientation, Displacement}}, DisplayConfig};
 use structopt::StructOpt;
 
-use self::actions::{Action, ModeAction, PrimaryAction, RotationAction, ScaleAction};
+use self::actions::{Action, ModeAction, PrimaryAction, OrientationAction, ScaleAction, DisplacementAction};
 
-#[derive(Clone, Copy)]
-pub enum Rotation {
-    Normal,
-    Left,
-    Right,
-    Inverted,
-}
-
-impl std::str::FromStr for Rotation {
-    type Err = std::fmt::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "normal" => Ok(Rotation::Normal),
-            "left" => Ok(Rotation::Left),
-            "right" => Ok(Rotation::Right),
-            "inverted" => Ok(Rotation::Inverted),
-            _ => Err(std::fmt::Error),
-        }
-    }
-}
-
-impl std::fmt::Display for Rotation {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Rotation::Normal => "normal",
-                Rotation::Left => "left",
-                Rotation::Right => "right",
-                Rotation::Inverted => "inverted",
-            }
-        )
-    }
-}
 
 #[derive(StructOpt)]
 pub struct ActionOptions {
     #[structopt(
         short,
-        long = "rotate",
-        help = "One of 'normal', 'left', 'right' or 'inverted'",
-        long_help = "One of 'normal', 'left', 'right' or 'inverted'. This causes the output contents to be rotated in the specified direction. 'right' specifies a clockwise rotation of the picture and 'left' specifies a counter-clockwise rotation."
+        long,
+        help = "A desired orientation of the display.",
+        long_help = "Any of ('normal', 'left', 'right' or 'inverted'). and optionally 'flipped' joined by ','. EG 'normal,flipped'. This causes the output contents to be rotated in the specified direction. 'right' specifies a 1/4 clockwise rotation of the picture and 'left' specifies a 3/4 clockwise rotation."
     )]
-    pub rotation: Option<Rotation>,
+    pub rotation: Option<Orientation>,
 
     #[structopt(
         short,
@@ -65,6 +29,14 @@ pub struct ActionOptions {
 
     #[structopt(long, help = "Set the scale")]
     pub scale: Option<f64>,
+
+    #[structopt(
+        short,
+        long,
+        help = "A desired x,y, and scale.",
+        long_help = "A comma-separated list of displacement information '100,88,1'. The order is always X, Y, Scale. This does not check whether monitors can be arranged in that way."
+    )]
+    pub displacement: Option<Displacement>
 }
 
 #[derive(StructOpt)]
@@ -120,8 +92,8 @@ pub fn handle(
     let primary_is_changing = opts.actions.primary;
 
     if let Some(rotation) = &opts.actions.rotation {
-        actions.push(Box::new(RotationAction {
-            rotation: *rotation,
+        actions.push(Box::new(OrientationAction {
+            orientation: *rotation,
         }));
     }
 
@@ -135,6 +107,12 @@ pub fn handle(
 
     if let Some(scale) = &opts.actions.scale {
         actions.push(Box::new(ScaleAction { scale: *scale }))
+    }
+
+    if let Some(displacement) = &opts.actions.displacement {
+        actions.push(Box::new(DisplacementAction {
+            displacement: *displacement,
+        }))
     }
 
     if actions.is_empty() {
@@ -162,11 +140,11 @@ pub fn handle(
         .monitors
         .iter()
         .filter_map(|monitor| {
-            if monitor.connector == opts.connector {
+            if monitor.monitor_description.connector == opts.connector {
                 return Some(apply_config.clone());
             }
 
-            let (logical_monitor, _) = match config.search(&monitor.connector) {
+            let (logical_monitor, _) = match config.search(&monitor.monitor_description.connector) {
                 Some(monitors) => monitors,
                 None => return None,
             };

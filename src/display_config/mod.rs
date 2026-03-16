@@ -1,11 +1,14 @@
 pub mod logical_monitor;
 pub mod physical_monitor;
 pub mod proxied_methods;
+pub mod monitor_models;
 mod raw;
 
 use logical_monitor::LogicalMonitor;
 use physical_monitor::PhysicalMonitor;
 pub use proxied_methods::{ApplyConfig, ApplyMonitor};
+pub use monitor_models::Transform;
+pub use monitor_models::MonitorDescription;
 
 // Config properties/comments are sourced from https://github.com/jadahl/gnome-monitor-config/blob/master/src/org.gnome.Mutter.DisplayConfig.xml
 
@@ -149,7 +152,7 @@ impl DisplayConfig {
         let physical_monitor = self
             .monitors
             .iter()
-            .find(|monitor| monitor.connector == *connector);
+            .find(|monitor| monitor.monitor_description.connector == *connector);
 
         let logical_monitor = self.logical_monitors.iter().find(|monitor| {
             monitor
